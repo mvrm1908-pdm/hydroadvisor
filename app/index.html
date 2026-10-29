@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HydroAdvisor - Hydraulic Pump Predictive Maintenance</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+  body { background: #0f1923; color: #e0e6f0; min-height: 100vh; }
+  
+  header { background: #162032; padding: 18px 30px; border-bottom: 2px solid #1e90ff; 
+    display: flex; align-items: center; gap: 14px; }
+  header h1 { font-size: 1.4rem; color: #1e90ff; }
+  header span { font-size: 0.85rem; color: #8899aa; }
+  .gear { font-size: 1.8rem; }
+
+  .layout { display: flex; height: calc(100vh - 62px); }
+  
+  /* Left Panel: Sensor Inputs + Results */
+  .left-panel { width: 420px; min-width: 360px; background: #162032; 
+    overflow-y: auto; border-right: 1px solid #1e3050; display: flex; flex-direction: column; }
+  
+  .section { padding: 18px 20px; border-bottom: 1px solid #1e3050; }
+  .section h3 { font-size: 0.8rem; color: #5588aa; text-transform: uppercase; 
+    letter-spacing: 1px; margin-bottom: 14px; }
+  
+  .input-group { margin-bottom: 10px; }
+  .input-group label { font-size: 0.75rem; color: #8899bb; display: block; margin-bottom: 4px; }
+  .input-group input { width: 100%; padding: 7px 10px; background: #0f1923; 
+    border: 1px solid #1e3050; border-radius: 5px; color: #e0e6f0; font-size: 0.85rem; }
+  .input-group input:focus { outline: none; border-color: #1e90ff; }
+  
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  
+  .predict-btn { width: 100%; padding: 12px; background: #1e90ff; color: white; 
+    border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600; 
+    cursor: pointer; transition: background 0.2s; margin-top: 4px; }
+  .predict-btn:hover { background: #1a7adc; }
+  .predict-btn:disabled { background: #334; cursor: not-allowed; }
+
+  /* Results */
+  .results { padding: 18px 20px; display: none; }
+  .results.show { display: block; }
+  
+  .health-gauge { text-align: center; margin-bottom: 16px; }
+  .score-circle { width: 80px; height: 80px; border-radius: 50%; display: inline-flex;
+    align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700;
+    border: 4px solid; }
+  .score-good { border-color: #22cc77; color: #22cc77; background: #0a2218; }
+  .score-watch { border-color: #1e90ff; color: #1e90ff; background: #0a1a23; }
+  .score-warn { border-color: #f0a020; color: #f0a020; background: #231800; }
+  .score-crit { border-color: #ee3344; color: #ee3344; background: #200a0c; }
+
+  .metric-row { display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid #1e3050; }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-label { font-size: 0.78rem; color: #8899aa; }
+  .metric-value { font-size: 0.88rem; font-weight: 600; }
+  
+  .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+  .badge-normal { background: #0a2218; color: #22cc77; }
+  .badge-watch { background: #0a1a23; color: #1e90ff; }
+  .badge-caution { background: #231800; color: #f0a020; }
+  .badge-urgent { background: #200a0c; color: #ee3344; }
+
+  .action-box { margin-top: 12px; padding: 10px 12px; border-radius: 6px; 
+    font-size: 0.82rem; line-height: 1.5; }
+  .action-normal { background: #0a2218; border-left: 3px solid #22cc77; }
+  .action-watch { background: #0a1a23; border-left: 3px solid #1e90ff; }
+  .action-caution { background: #231800; border-left: 3px solid #f0a020; }
+  .action-urgent { background: #200a0c; border-left: 3px solid #ee3344; }
+
+  /* Right Panel: Chat */
+  .chat-panel { flex: 1; display: flex; flex-direction: column; }
+  
+  .chat-header { padding: 14px 20px; background: #162032; border-bottom: 1px solid #1e3050;
+    display: flex; align-items: center; gap: 10px; }
+  .chat-header h3 { font-size: 0.9rem; color: #e0e6f0; }
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #22cc77; }
+  .chat-header small { color: #5588aa; font-size: 0.75rem; }
+
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; 
+    display: flex; flex-direction: column; gap: 12px; }
+  
+  .msg { max-width: 80%; padding: 10px 14px; border-radius: 10px; 
+    font-size: 0.85rem; line-height: 1.55; }
+  .msg-user { align-self: flex-end; background: #1e4080; color: #e0f0ff; border-radius: 10px 10px 2px 10px; }
+  .msg-ai { align-self: flex-start; background: #1a2a3a; color: #d0dde8; border-radius: 10px 10px 10px 2px; }
+  .msg-ai .sender { font-size: 0.72rem; color: #5588aa; margin-bottom: 5px; font-weight: 600; }
+  .typing { color: #5588aa; font-style: italic; }
+
+  .chat-input-row { padding: 14px 20px; background: #162032; border-top: 1px solid #1e3050;
+    display: flex; gap: 10px; }
+  .chat-input-row input { flex: 1; padding: 10px 14px; background: #0f1923; 
+    border: 1px solid #1e3050; border-radius: 6px; color: #e0e6f0; font-size: 0.88rem; }
+  .chat-input-row input:focus { outline: none; border-color: #1e90ff; }
+  .send-btn { padding: 10px 18px; background: #1e90ff; color: white; 
+    border: none; border-radius: 6px; cursor: pointer; font-size: 0.88rem; }
+  .send-btn:hover { background: #1a7adc; }
+  .send-btn:disabled { background: #334; cursor: not-allowed; }
+
+  .suggestion-chips { padding: 8px 20px; display: flex; gap: 8px; flex-wrap: wrap; background: #0f1923; }
+  .chip { padding: 5px 12px; background: #1e3050; border: 1px solid #2a4060; 
+    border-radius: 14px; font-size: 0.75rem; color: #8899bb; cursor: pointer; 
+    transition: all 0.2s; white-space: nowrap; }
+  .chip:hover { background: #1e4080; color: #e0f0ff; border-color: #1e90ff; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: #0f1923; }
+  ::-webkit-scrollbar-thumb { background: #1e3050; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  
+  <div>
+    <h1>HydroAdvisor</h1>
+    <span>Hydraulic Pump Predictive Maintenance System</span>
+  </div>
+</header>
+
+<div class="layout">
+
+    <!-- LEFT: Inputs + Results -->
+    <div class="left-panel">
+
+        <div class="section">
+            <h3>Asset Identification</h3>
+            <div class="input-group">
+                <label>Pump Asset ID</label>
+                <input id="asset_id" type="text" placeholder="e.g. PUMP-WH3-014">
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Pressure Sensors (bar)</h3>
+            <div class="row2">
+                <div class="input-group"><label>PS1 Mean</label><input id="ps1_mean" type="number" placeholder="e.g. 155.0" step="0.1"></div>
+                <div class="input-group"><label>PS1 Variance</label><input id="ps1_var" type="number" placeholder="e.g. 8.5" step="0.01"></div>
+                <div class="input-group"><label>PS2 Mean</label><input id="ps2_mean" type="number" placeholder="e.g. 154.5" step="0.1"></div>
+                <div class="input-group"><label>PS3 Mean</label><input id="ps3_mean" type="number" placeholder="e.g. 10.5" step="0.1"></div>
+                <div class="input-group"><label>PS4 Mean</label><input id="ps4_mean" type="number" placeholder="e.g. 2.1" step="0.01"></div>
+                <div class="input-group"><label>PS5 Mean (Inlet)</label><input id="ps5_mean" type="number" placeholder="e.g. 8.5" step="0.1"></div>
+            </div>
+            <div class="input-group"><label>PS1 Pressure Drop Rate (bar/s)</label><input id="ps1_drop_rate" type="number" placeholder="e.g. 0.3" step="0.01"></div>
+            <div class="input-group"><label>Motor Power EPS1 (W)</label><input id="eps1_mean" type="number" placeholder="e.g. 2470" step="0.1"></div>
+        </div>
+
+        <div class="section">
+            <h3>Vibration (mm/s)</h3>
+            <div class="row2">
+                <div class="input-group"><label>VS1 RMS</label><input id="vs1_rms" type="number" placeholder="e.g. 0.52" step="0.01"></div>
+                <div class="input-group"><label>VS1 Kurtosis</label><input id="vs1_kurtosis" type="number" placeholder="e.g. 3.2" step="0.01"></div>
+                <div class="input-group"><label>VS1 Peak</label><input id="vs1_peak" type="number" placeholder="e.g. 1.8" step="0.01"></div>
+                <div class="input-group"><label>VS1 Skewness</label><input id="vs1_skew" type="number" placeholder="e.g. 0.1" step="0.01"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Temperature & Flow</h3>
+            <div class="row2">
+                <div class="input-group"><label>TS1 Mean (°C)</label><input id="ts1_mean" type="number" placeholder="e.g. 35.4" step="0.1"></div>
+                <div class="input-group"><label>TS2 Mean (°C)</label><input id="ts2_mean" type="number" placeholder="e.g. 40.1" step="0.1"></div>
+                <div class="input-group"><label>FS1 Mean (L/min)</label><input id="fs1_mean" type="number" placeholder="e.g. 8.9" step="0.1"></div>
+                <div class="input-group"><label>CE Mean (%)</label><input id="ce_mean" type="number" placeholder="e.g. 31.7" step="0.1"></div>
+                <div class="input-group"><label>CP Mean (kW)</label><input id="cp_mean" type="number" placeholder="e.g. 1.8" step="0.01"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Composite Indicators (Advanced, Optional)</h3>
+            <div class="row2">
+                <div class="input-group"><label>ts_gradient (°C, if known)</label><input id="ts_gradient" type="number" placeholder="leave blank to auto-derive" step="0.001"></div>
+                <div class="input-group"><label>degrad_index (if known)</label><input id="degrad_index" type="number" placeholder="leave blank to auto-derive" step="0.0001"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Efficiency Inputs (Optional)</h3>
+            <div class="row2">
+                <div class="input-group"><label>Actual Flow (L/min)</label><input id="actual_flow" type="number" placeholder="e.g. 8.5" step="0.1"></div>
+                <div class="input-group"><label>Theoretical Flow (L/min)</label><input id="theoretical_flow" type="number" placeholder="e.g. 9.5" step="0.1"></div>
+            </div>
+            <div class="input-group"><label>ISO 4406 Code (if known)</label><input id="iso_code" type="text" placeholder="e.g. 18/16/13"></div>
+            <div class="input-group"><label>System Efficiency SE (%, if known)</label><input id="system_efficiency" type="number" placeholder="e.g. 58.5" step="0.1"></div>
+        </div>
+
+        <div class="section">
+            <button class="predict-btn" onclick="runPrediction()" id="predict-btn">
+                Analyse Pump Health
+            </button>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results-panel">
+            <h3 style="font-size:0.8rem;color:#5588aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;">
+                Assessment Results
+            </h3>
+            <div class="health-gauge">
+                <div class="score-circle" id="score-circle">--</div>
+                <div style="margin-top:8px;font-size:0.8rem;color:#8899aa;">Health Score / 100</div>
+            </div>
+            <div id="metrics-list"></div>
+            <div class="action-box" id="action-box"></div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Chat -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <div class="online-dot"></div>
+            <div>
+                <h3>HydroAdvisor AI Chat</h3>
+                <small></small>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg msg-ai">
+                <div class="sender">HydroAdvisor</div>
+                Hello! I am HydroAdvisor. Enter your sensor readings on the left and click "Analyse Pump Health" to get started. Then ask me anything about your pump, like "What does the kurtosis value mean?" or "How do I calculate volumetric efficiency?"
+            </div>
+        </div>
+
+        <div class="suggestion-chips" id="chips">
+            <div class="chip" onclick="sendChip('What is volumetric efficiency and how is it calculated?')">Volumetric efficiency?</div>
+            <div class="chip" onclick="sendChip('What does a kurtosis value above 4 mean for my pump?')">High kurtosis meaning?</div>
+            <div class="chip" onclick="sendChip('Explain what ISO 4406 contamination code means in simple words')">ISO 4406 explained</div>
+            <div class="chip" onclick="sendChip('When should I schedule the next maintenance?')">Maintenance schedule?</div>
+            <div class="chip" onclick="sendChip('What is causing the health score to be low?')">Why low health score?</div>
+        </div>
+
+        <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Ask about your pump health, sensor readings, maintenance..."
+                   onkeydown="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+  const API_URL = "http://localhost:5000"; // Change to your deployed URL
+  let chatHistory = [];
+  let currentPrediction = null;
+
+  async function runPrediction() {
+    const btn = document.getElementById("predict-btn");
+    btn.disabled = true;
+    btn.textContent = "Analysing...";
+
+    const sensor_values = {
+      ps1_mean:        parseFloat(document.getElementById("ps1_mean").value) || 0,
+      ps1_var:         parseFloat(document.getElementById("ps1_var").value) || 0,
+      ps1_drop_rate:   parseFloat(document.getElementById("ps1_drop_rate").value) || 0,
+      eps1_mean:       parseFloat(document.getElementById("eps1_mean").value) || null,
+      ps2_mean:        parseFloat(document.getElementById("ps2_mean").value) || 0,
+      ps3_mean:        parseFloat(document.getElementById("ps3_mean").value) || 0,
+      ps4_mean:        parseFloat(document.getElementById("ps4_mean").value) || 0,
+      ps5_mean:        parseFloat(document.getElementById("ps5_mean").value) || 0,
+      vs1_rms:         parseFloat(document.getElementById("vs1_rms").value) || 0,
+      vs1_kurtosis:    parseFloat(document.getElementById("vs1_kurtosis").value) || 3.0,
+      vs1_peak:        parseFloat(document.getElementById("vs1_peak").value) || 0,
+      vs1_skew:        parseFloat(document.getElementById("vs1_skew").value) || 0,
+      ts1_mean:        parseFloat(document.getElementById("ts1_mean").value) || 35,
+      ts2_mean:        parseFloat(document.getElementById("ts2_mean").value) || null,
+      fs1_mean:        parseFloat(document.getElementById("fs1_mean").value) || 0,
+      ce_mean:         parseFloat(document.getElementById("ce_mean").value) || null,
+      cp_mean:         parseFloat(document.getElementById("cp_mean").value) || null,
+      ts_gradient:     document.getElementById("ts_gradient").value !== "" ? parseFloat(document.getElementById("ts_gradient").value) : null,
+      degrad_index:    document.getElementById("degrad_index").value !== "" ? parseFloat(document.getElementById("degrad_index").value) : null,
+      actual_flow:     parseFloat(document.getElementById("actual_flow").value) || null,
+      theoretical_flow:parseFloat(document.getElementById("theoretical_flow").value) || null,
+      iso_4406_code:   document.getElementById("iso_code").value || "Not measured",
+      system_efficiency: parseFloat(document.getElementById("system_efficiency").value) || null
+    };
+    const asset_id = document.getElementById("asset_id").value.trim() || "UNASSIGNED";
+    try {
+      const res = await fetch(`${API_URL}/predict`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ sensor_values, asset_id })
+      });
+      const data = await res.json();
+      currentPrediction = data;
+      displayResults(data);
+
+      // Auto-send context to chat
+        addMessage("ai", `Analysis complete for ${asset_id}. Health Score: ${data.health_score}/100 | Status: ${data.pump_leakage_label} | Urgency: ${data.urgency}. Ask me anything about these results.`);
+    } catch(e) {
+      alert("Could not connect to backend. Make sure app.py is running.\n\nError: " + e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Analyse Pump Health";
+  }
+
+  function displayResults(data) {
+    const panel = document.getElementById("results-panel");
+      panel.classList.add("show");
+    // Health score circle
+    const circle = document.getElementById("score-circle");
+    circle.textContent = data.health_score;
+    circle.className = "score-circle";
+    if (data.health_score >= 75) circle.classList.add("score-good");
+    else if (data.health_score >= 60) circle.classList.add("score-watch");
+    else if (data.health_score >= 40) circle.classList.add("score-warn");
+    else circle.classList.add("score-crit");
+
+    // Metrics
+    const urgencyClass = {NORMAL:"badge-normal", WATCH:"badge-watch", CAUTION:"badge-caution", URGENT:"badge-urgent"}[data.urgency] || "badge-normal";
+    document.getElementById("metrics-list").innerHTML = `
+    <div class="metric-row">
+        <span class="metric-label">Asset ID</span>
+        <span class="metric-value">${data.asset_id || "UNASSIGNED"}</span>
+      </div>
+          <div class="metric-row">
+        <span class="metric-label">Leakage Status</span>
+        <span class="metric-value">${data.pump_leakage_label}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Confidence</span>
+        <span class="metric-value">${data.confidence}%</span>
+      </div>
+     
+      <div class="metric-row">
+        <span class="metric-label">Volumetric Efficiency</span>
+        <span class="metric-value">${data.volumetric_efficiency ? data.volumetric_efficiency + "%" : "Not measured"}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">ISO 4406</span>
+        <span class="metric-value">${data.iso_4406_level}</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Urgency</span>
+        <span class="badge ${urgencyClass}">${data.urgency}</span>
+      </div>
+    `;
+
+    const actionClass = {NORMAL:"action-normal", WATCH:"action-watch", CAUTION:"action-caution", URGENT:"action-urgent"}[data.urgency] || "action-normal";
+    document.getElementById("action-box").className = "action-box " + actionClass;
+    document.getElementById("action-box").textContent = data.maintenance_action;
+  }
+
+
+
+  async function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    sendChip(text);
+  }
+
+  async function sendChip(text) {
+    addMessage("user", text);
+    chatHistory.push({role: "user", content: text});
+
+    const sendBtn = document.getElementById("send-btn");
+    sendBtn.disabled = true;
+
+    const typingId = addMessage("ai", "...", true);
+
+    try {
+      const res = await fetch(`${API_URL}/chat`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          messages: chatHistory,
+          prediction_context: currentPrediction
+        })
+      });
+      const data = await res.json();
+      document.getElementById(typingId).remove();
+      addMessage("ai", data.reply);
+      chatHistory.push({role: "assistant", content: data.reply});
+    } catch(e) {
+      document.getElementById(typingId).remove();
+      addMessage("ai", "Connection error. Make sure the backend is running.");
+    }
+
+    sendBtn.disabled = false;
+  }
+
+  function addMessage(role, text, isTyping = false) {
+    const container = document.getElementById("chat-messages");
+    const div = document.createElement("div");
+    const id = "msg-" + Date.now();
+    div.id = id;
+    div.className = role === "user" ? "msg msg-user" : "msg msg-ai";
+    if (role === "ai") {
+      div.innerHTML = `<div class="sender">HydroAdvisor</div><div class="${isTyping ? 'typing' : ''}">${text.replace(/\n/g,'<br>')}</div>`;
+    } else {
+      div.textContent = text;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+  }
+</script>
+</body>
+</html>

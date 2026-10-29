@@ -1,0 +1,423 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "model": "Random Forest Hydraulic Pump Health Classifier",
+    "features_total": 33,
+    "features_included_here": 15,
+    "note": "This file is read by the LLM chat to explain sensor values in plain language"
+  },
+  "features": {
+    "PS1.txt_var": {
+      "display_name": "Pump Discharge Pressure Variance",
+      "unit": "bar\u00b2",
+      "sensor": "PS1 (Main discharge pressure)",
+      "mechanism": "As piston-barrel clearances enlarge through wear, pressure ripple amplitude increases. Variance captures this ripple energy increase.",
+      "healthy_range": {
+        "min": 2.0,
+        "max": 8.0
+      },
+      "warning_range": {
+        "min": 8.0,
+        "max": 15.0
+      },
+      "critical_range": {
+        "min": 15.0,
+        "max": 200.0
+      },
+      "interpretation": {
+        "healthy": "Low variance indicates uniform pressure output. Wear is minimal.",
+        "warning": "Elevated pressure variance suggests early piston or slipper wear. Monitor closely.",
+        "critical": "Very high variance indicates severe internal leakage and damaged tribological surfaces."
+      },
+      "physics_basis": "Helwig et al. (2015); Tang et al. (2022) on ripple-wear correlation"
+    },
+    "VS1.txt_kurtosis": {
+      "display_name": "Vibration Kurtosis (Impulsiveness)",
+      "unit": "dimensionless",
+      "sensor": "VS1 (Housing vibration)",
+      "mechanism": "Bearing and slipper surface defects create impulsive acceleration peaks. Kurtosis is sensitive to these impacts.",
+      "healthy_range": {
+        "min": 2.8,
+        "max": 4.0
+      },
+      "warning_range": {
+        "min": 4.0,
+        "max": 6.5
+      },
+      "critical_range": {
+        "min": 6.5,
+        "max": 30.0
+      },
+      "interpretation": {
+        "healthy": "Kurtosis near 3 indicates Gaussian-like vibration. No major defects detected.",
+        "warning": "Elevated kurtosis suggests early bearing wear or pitting. Schedule inspection.",
+        "critical": "Very high kurtosis indicates advanced bearing degradation or catastrophic failure imminent."
+      },
+      "physics_basis": "ISO 13373-1 condition monitoring; standard bearing fault signature analysis"
+    },
+    "FS1.txt_mean": {
+      "display_name": "Pump Output Flow (Mean)",
+      "unit": "L/min",
+      "sensor": "FS1 (Discharge flow)",
+      "mechanism": "Internal leakage increases as seals wear, reducing net output flow. Lower flow = higher leakage.",
+      "healthy_range": {
+        "min": 8.5,
+        "max": 9.5
+      },
+      "warning_range": {
+        "min": 7.5,
+        "max": 8.5
+      },
+      "critical_range": {
+        "min": 0.0,
+        "max": 7.5
+      },
+      "interpretation": {
+        "healthy": "Flow near rated capacity (9 L/min nominal). Pump is efficient.",
+        "warning": "Flow decline indicates volumetric efficiency loss from internal leakage. Quantify efficiency drop.",
+        "critical": "Severely reduced flow. Pump cannot maintain system pressure. Failure is imminent."
+      },
+      "physics_basis": "Wu et al. (2023) - volumetric efficiency as health proxy"
+    },
+    "PS2.txt_mean": {
+      "display_name": "Tank Return Pressure",
+      "unit": "bar",
+      "sensor": "PS2 (Return line pressure)",
+      "mechanism": "Blocked return line or restricted tank port increases return pressure. This indicates flow restriction.",
+      "healthy_range": {
+        "min": 3.0,
+        "max": 5.0
+      },
+      "warning_range": {
+        "min": 5.0,
+        "max": 8.0
+      },
+      "critical_range": {
+        "min": 8.0,
+        "max": 50.0
+      },
+      "interpretation": {
+        "healthy": "Low return pressure indicates unrestricted return path. Normal operation.",
+        "warning": "Elevated return pressure suggests filter clogging or return line restriction.",
+        "critical": "Dangerous high back-pressure. Risk of seal failure on return side."
+      },
+      "physics_basis": "Hydraulic circuit analysis; ISO 17359:2018 condition assessment"
+    },
+    "PS5.txt_mean": {
+      "display_name": "Pump Inlet Pressure",
+      "unit": "bar",
+      "sensor": "PS5 (Inlet/suction pressure)",
+      "mechanism": "Low inlet pressure (vacuum) indicates cavitation risk or restricted inlet flow.",
+      "healthy_range": {
+        "min": 6.0,
+        "max": 10.0
+      },
+      "warning_range": {
+        "min": 3.0,
+        "max": 6.0
+      },
+      "critical_range": {
+        "min": -0.5,
+        "max": 3.0
+      },
+      "interpretation": {
+        "healthy": "Adequate inlet pressure (positive gauge). No cavitation risk.",
+        "warning": "Low inlet pressure increases cavitation risk. Check inlet filter, oil level, viscosity.",
+        "critical": "Near-vacuum conditions at inlet. Immediate cavitation occurring. Damage accumulating."
+      },
+      "physics_basis": "Cavitation inception theory; ISO 4413 fluid power system design"
+    },
+    "VS1.txt_rms": {
+      "display_name": "Vibration RMS Amplitude",
+      "unit": "mm/s",
+      "sensor": "VS1 (Housing accelerometer)",
+      "mechanism": "Overall vibration energy increases with wear, imbalance, and bearing defects.",
+      "healthy_range": {
+        "min": 0.3,
+        "max": 0.6
+      },
+      "warning_range": {
+        "min": 0.6,
+        "max": 1.2
+      },
+      "critical_range": {
+        "min": 1.2,
+        "max": 10.0
+      },
+      "interpretation": {
+        "healthy": "Low RMS vibration indicates smooth operation with minimal defects.",
+        "warning": "Elevated vibration suggests wear or imbalance. Investigate source.",
+        "critical": "Severe vibration indicates major mechanical failure. Shutdown recommended."
+      },
+      "physics_basis": "ISO 20816-2 vibration severity classification; condition monitoring standards"
+    },
+    "TS1.txt_mean": {
+      "display_name": "System Fluid Temperature",
+      "unit": "\u00b0C",
+      "sensor": "TS1 (Tank immersion temperature)",
+      "mechanism": "Elevated temperature indicates increased friction from wear, low fluid film, or excessive load.",
+      "healthy_range": {
+        "min": 30.0,
+        "max": 40.0
+      },
+      "warning_range": {
+        "min": 40.0,
+        "max": 55.0
+      },
+      "critical_range": {
+        "min": 55.0,
+        "max": 80.0
+      },
+      "interpretation": {
+        "healthy": "Temperature in normal range (30-40\u00b0C). Fluid condition good.",
+        "warning": "Elevated temperature reduces fluid viscosity and film integrity. Increase cooling.",
+        "critical": "Dangerously hot fluid. Viscosity critically low. Lubrication failing. Rapid wear accelerating."
+      },
+      "physics_basis": "Hydraulic fluid viscosity-temperature relationships; thermal degradation kinetics"
+    },
+    "PS1.txt_peak_to_peak": {
+      "display_name": "Pressure Peak-to-Peak (Ripple Magnitude)",
+      "unit": "bar",
+      "sensor": "PS1 (Main discharge)",
+      "mechanism": "Piston displacement and clearance changes cause periodic pressure variations. Worn clearances increase ripple.",
+      "healthy_range": {
+        "min": 1.0,
+        "max": 3.0
+      },
+      "warning_range": {
+        "min": 3.0,
+        "max": 6.0
+      },
+      "critical_range": {
+        "min": 6.0,
+        "max": 50.0
+      },
+      "interpretation": {
+        "healthy": "Low pressure ripple. Pump geometry is precise. No major wear.",
+        "warning": "Moderate ripple indicates geometric changes from wear. Validate with vibration data.",
+        "critical": "Extreme ripple indicates severe piston or barrel wear."
+      },
+      "physics_basis": "Pump ripple frequency analysis; Yang et al. (2022) fault diagnosis"
+    },
+    "VS1.txt_peak": {
+      "display_name": "Vibration Peak (Maximum Acceleration)",
+      "unit": "mm/s",
+      "sensor": "VS1 (Housing)",
+      "mechanism": "Transient impacts from bearing spalls or cavitation collapse create high-amplitude peaks.",
+      "healthy_range": {
+        "min": 0.5,
+        "max": 1.5
+      },
+      "warning_range": {
+        "min": 1.5,
+        "max": 3.0
+      },
+      "critical_range": {
+        "min": 3.0,
+        "max": 20.0
+      },
+      "interpretation": {
+        "healthy": "Low peak amplitudes indicate no impulsive events.",
+        "warning": "Elevated peaks suggest discrete defects forming (bearing spall, valve spool binding).",
+        "critical": "Very high peaks indicate catastrophic structural failure in progress."
+      },
+      "physics_basis": "Shock pulse analysis; bearing fault progression models"
+    },
+    "PS6.txt_mean": {
+      "display_name": "Pilot/Control Pressure",
+      "unit": "bar",
+      "sensor": "PS6 (Control circuit)",
+      "mechanism": "Control pressure drifts if control piston seals wear or pilot valve is sticking.",
+      "healthy_range": {
+        "min": 25.0,
+        "max": 35.0
+      },
+      "warning_range": {
+        "min": 20.0,
+        "max": 25.0
+      },
+      "critical_range": {
+        "min": 0.0,
+        "max": 20.0
+      },
+      "interpretation": {
+        "healthy": "Control pressure stable and within spec. Pilot system working.",
+        "warning": "Pressure drift suggests control piston seal wear. Check control system.",
+        "critical": "Loss of control pressure prevents pump pressure regulation. Failure imminent."
+      },
+      "physics_basis": "Variable displacement pump control systems; Bosch Rexroth hydraulic standards"
+    },
+    "VS1.txt_entropy": {
+      "display_name": "Vibration Signal Entropy",
+      "unit": "nats",
+      "sensor": "VS1 (Housing)",
+      "mechanism": "Fault-free operation has high entropy (noise-like). Faults create organized, periodic patterns (low entropy).",
+      "healthy_range": {
+        "min": 3.5,
+        "max": 4.5
+      },
+      "warning_range": {
+        "min": 2.5,
+        "max": 3.5
+      },
+      "critical_range": {
+        "min": 0.0,
+        "max": 2.5
+      },
+      "interpretation": {
+        "healthy": "High entropy indicates broadband noise, characteristic of normal operation.",
+        "warning": "Reduced entropy suggests structured defect signatures emerging.",
+        "critical": "Very low entropy indicates strong periodic fault signal."
+      },
+      "physics_basis": "Shannon entropy for signal complexity; anomaly detection theory"
+    },
+    "PS1.txt_skewness": {
+      "display_name": "Pressure Signal Skewness",
+      "unit": "dimensionless",
+      "sensor": "PS1 (Main discharge)",
+      "mechanism": "Cavitation bubbles create asymmetric pressure transients. Wear creates stepped pressure changes.",
+      "healthy_range": {
+        "min": -0.5,
+        "max": 0.5
+      },
+      "warning_range": {
+        "min": 0.5,
+        "max": 1.5
+      },
+      "critical_range": {
+        "min": 1.5,
+        "max": 10.0
+      },
+      "interpretation": {
+        "healthy": "Symmetric pressure signal. No cavitation or major wear signatures.",
+        "warning": "Skewed signal suggests cavitation inception or valve stiction.",
+        "critical": "Highly skewed pressure indicates severe cavitation or catastrophic wear."
+      },
+      "physics_basis": "Cavitation noise detection; pressure transient analysis"
+    },
+    "FS1.txt_variance": {
+      "display_name": "Flow Rate Variance",
+      "unit": "(L/min)\u00b2",
+      "sensor": "FS1 (Discharge)",
+      "mechanism": "Pump ripple creates periodic flow variations. Wear enlarges these ripples.",
+      "healthy_range": {
+        "min": 0.01,
+        "max": 0.1
+      },
+      "warning_range": {
+        "min": 0.1,
+        "max": 0.3
+      },
+      "critical_range": {
+        "min": 0.3,
+        "max": 5.0
+      },
+      "interpretation": {
+        "healthy": "Low flow variance. Steady output. Pump displacement stable.",
+        "warning": "Elevated variance indicates ripple amplification from wear.",
+        "critical": "High flow variance indicates severe displacement changes."
+      },
+      "physics_basis": "Flow ripple frequency analysis; displacement mechanism wear"
+    },
+    "TS1.txt_gradient": {
+      "display_name": "Temperature Rise Rate",
+      "unit": "\u00b0C/min",
+      "sensor": "TS1 (Tank temperature)",
+      "mechanism": "Fast temperature rise indicates high friction from loss of fluid film (advanced wear).",
+      "healthy_range": {
+        "min": -0.1,
+        "max": 0.05
+      },
+      "warning_range": {
+        "min": 0.05,
+        "max": 0.2
+      },
+      "critical_range": {
+        "min": 0.2,
+        "max": 2.0
+      },
+      "interpretation": {
+        "healthy": "Stable or slowly rising temperature. Thermal equilibrium established.",
+        "warning": "Significant temperature rise rate suggests accelerated wear.",
+        "critical": "Rapid temperature rise indicates lubricant film breakdown and metal-on-metal contact."
+      },
+      "physics_basis": "Thermal energy balance; friction work and heat generation"
+    },
+    "PS1.txt_crest_factor": {
+      "display_name": "Pressure Crest Factor",
+      "unit": "dimensionless",
+      "sensor": "PS1 (Main discharge)",
+      "mechanism": "Sudden pressure spikes from valve spool slamming or cavitation collapse.",
+      "healthy_range": {
+        "min": 1.2,
+        "max": 1.8
+      },
+      "warning_range": {
+        "min": 1.8,
+        "max": 2.5
+      },
+      "critical_range": {
+        "min": 2.5,
+        "max": 10.0
+      },
+      "interpretation": {
+        "healthy": "Low crest factor indicates gradual pressure changes. No impulsive events.",
+        "warning": "Elevated crest factor suggests valve switching or cavitation events.",
+        "critical": "Very high crest factor indicates severe transient spikes. Structural stress risk."
+      },
+      "physics_basis": "Transient pressure analysis; directional control valve dynamics"
+    }
+  },
+  "interpretation_rules": {
+    "health_score_calculation": {
+      "algorithm": "Weighted composite scoring",
+      "description": "Health score computed as a weighted composite of system efficiency, severe leakage probability, and volumetric efficiency.",
+      "formula": "health_score = (0.40 * normalized_SE) + (0.35 * (1 - P_severe_leakage)) + (0.25 * volumetric_efficiency_ratio)",
+      "ranges": {
+        "75-100": "LOW URGENCY: Normal operation. Continue standard monitoring.",
+        "60-74": "MEDIUM URGENCY: Mild degradation detected. Plan maintenance at next scheduled downtime window.",
+        "40-59": "HIGH URGENCY: Significant wear present. Expedited maintenance within 72 hours.",
+        "0-39": "CRITICAL URGENCY: Severe degradation. Immediate corrective action required."
+      }
+    }
+  },
+  "maintenance_decision": {
+    "rules": [
+      {
+        "condition": "health_score >= 75",
+        "action": "NORMAL OPERATION",
+        "urgency": "NORMAL",
+        "recommendation": "Continue standard monitoring cycle. No corrective action required. Log assessment to maintenance history record."
+      },
+      {
+        "condition": "health_score >= 60 AND health_score < 75",
+        "action": "PLAN MAINTENANCE",
+        "urgency": "WATCH",
+        "recommendation": "Plan corrective maintenance at next scheduled downtime window. Maintain standard monitoring intervals. Pre-order spare parts."
+      },
+      {
+        "condition": "health_score >= 40 AND health_score < 60",
+        "action": "EXPEDITED MAINTENANCE",
+        "urgency": "CAUTION",
+        "recommendation": "Expedited corrective maintenance within 72 hours. Increase monitoring frequency to 4-hourly cycle assessment."
+      },
+      {
+        "condition": "health_score < 40",
+        "action": "IMMEDIATE ACTION REQUIRED",
+        "urgency": "URGENT",
+        "recommendation": "Immediate corrective maintenance. Remove from service if operationally feasible. Escalate to maintenance supervisor."
+      }
+    ]
+  },
+  "llm_prompt_injection": {
+    "instruction": "When explaining a prediction to the user, reference this feature interpretation data.",
+    "template": "The model detected [FEATURE_NAME] at [VALUE][UNIT]. This feature indicates [MECHANISM]. Your pump is in the [RANGE] zone, which means [INTERPRETATION].",
+    "example": "The model detected VS1 Kurtosis at 5.2 (dimensionless). This indicates impulsive vibration from bearing surface defects. Your pump is in the warning zone, which means early bearing wear is developing. Schedule inspection within 2 weeks to confirm bearing condition."
+  },
+  "calibration": {
+    "model_confidence": "Random Forest",
+    "calibration_status": "VERIFY LOCALLY",
+    "instructions": "Run calibration_curve analysis in notebook to confirm predicted probabilities match actual correctness rates. Document findings in thesis Chapter 4.",
+    "expected_behavior": "Predicted 70% confidence should match ~70% actual correctness if well-calibrated."
+  }
+}
