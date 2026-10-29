@@ -26,7 +26,7 @@ It classifies hydraulic pump **internal leakage** (none / weak / severe) from te
 
 ## Run it
 ```bash
-git clone https://github.com/<your-user>/hydroadvisor.git
+git clone https://github.com/mvrm1908-pdm/hydroadvisor.git
 cd hydroadvisor
 python -m venv .venv && .venv\Scripts\activate      # Windows (Linux/macOS: source .venv/bin/activate)
 pip install -r requirements.txt
